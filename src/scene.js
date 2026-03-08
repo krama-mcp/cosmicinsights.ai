@@ -1,4 +1,7 @@
 import * as THREE from 'three'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 
 export async function initScene() {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
@@ -18,15 +21,26 @@ export async function initScene() {
   const ambient = new THREE.AmbientLight(0xffffff, 0.1)
   scene.add(ambient)
 
+  // Bloom post-processing
+  const composer = new EffectComposer(renderer)
+  composer.addPass(new RenderPass(scene, camera))
+  composer.addPass(new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.8,   // strength
+    0.4,   // radius
+    0.85   // threshold
+  ))
+
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
     renderer.setSize(window.innerWidth, window.innerHeight)
+    composer.setSize(window.innerWidth, window.innerHeight)
   })
 
   function animate() {
     requestAnimationFrame(animate)
-    renderer.render(scene, camera)
+    composer.render()
   }
   animate()
 
